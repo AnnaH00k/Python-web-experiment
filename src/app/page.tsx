@@ -36,6 +36,9 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <h1 className="text-6xl font-bold">Hello Pythons</h1>
+      <p className="text-lg text-gray-600">
+        This is a simple Dijkstra's algorithm implementation using Python and Next.js.
+      </p>
       <h2 className="text-2xl">Graph:</h2>
       <pre>{JSON.stringify(graph, null, 2)}</pre>
       <h2 className="text-2xl">Start Node:</h2>
