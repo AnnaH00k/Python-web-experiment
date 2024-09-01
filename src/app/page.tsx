@@ -1,6 +1,7 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import cytoscape from 'cytoscape';
 
 type Graph = {
   [key: string]: { [key: string]: number };
@@ -21,6 +22,8 @@ export default function Home() {
   const [startNode, setStartNode] = useState<string>('A');
   const [result, setResult] = useState<DijkstraResult | null>(null);
 
+  const cyRef = useRef<HTMLDivElement>(null);
+
   const handleDijkstra = async () => {
     try {
       const response = await axios.post('/api/dijkstra', {
@@ -33,6 +36,50 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    if (cyRef.current) {
+      const elements = Object.entries(graph).flatMap(([source, edges]) =>
+        Object.entries(edges).map(([target, weight]) => ({
+          data: { id: source + target, source, target, weight }
+        }))
+      );
+
+      const nodes = Object.keys(graph).map((node) => ({
+        data: { id: node }
+      }));
+
+      const cy = cytoscape({
+        container: cyRef.current,
+        elements: [...nodes, ...elements],
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'background-color': '#007bff',
+              label: 'data(id)'
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 2,
+              'line-color': '#ccc',
+              'target-arrow-color': '#ccc',
+              'target-arrow-shape': 'triangle',
+              label: 'data(weight)'
+            }
+          }
+        ],
+        layout: {
+          name: 'grid',
+          rows: Math.ceil(Object.keys(graph).length / 3)
+        }
+      });
+
+      return () => cy.destroy();
+    }
+  }, [graph]);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <h1 className="text-6xl font-bold">Hello Pythons</h1>
@@ -40,6 +87,8 @@ export default function Home() {
         This is a simple Dijkstra's algorithm implementation using Python and Next.js.
       </p>
       <h2 className="text-2xl">Graph:</h2>
+      <div ref={cyRef} style={{ width: '100%', height: '600px', border: '1px solid #ccc' }}></div>
+
       <pre>{JSON.stringify(graph, null, 2)}</pre>
       <h2 className="text-2xl">Start Node:</h2>
       <input
